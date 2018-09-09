@@ -45,6 +45,7 @@ $$ \ln(s_j) - \ln(s_0) = x_j \times \beta - \alpha \times p_j + \xi_j$$
 A higher $\xi_j$ will cause a higher $p_j$ (because firms are in a Bertrand price competition), all else equal.
 
 ## Explain in words why within-group share is endogenous in discrete choice models?
+
 The within-group is endogenous because is correlated with the  unobservable product characteristics ($\xi_j$). For instance, if the share of Mercedes Benz automobiles goes down (maybe because there is an increase in their prices), we would expect that the share of BMW cars goes up by much more than the share of Nissan cars. This would be because both Mercedes and BMW share characteristics that appeal to the same costumers.
 
 ## Derive marginal costs for single-product firms for Berry's nested logit model, given data and estimated parameters.
@@ -75,18 +76,21 @@ $$
 p_j = \bar{c_j} + \frac{1-\sigma}{\alpha}/[1 - \sigma \bar{s_{j/g}}-(1-\sigma)s_j] + \omega_j
 $$
 
-Since the parameters have been estimated, we can determine average marginal cost from the previous expression.
+Since the parameters have been estimated, we can determine average marginal cost from the previous expression. These derivation was taken from @berry1994.
 
 
 ## What are two useful source of instruments for discrete choice models? Explain.
-One possibility is to use price variation across cities or regions as cost shifters. They are a valid instrument if the marginal costs are correlated across cities, but not the unobservable product characteristics ($\xi_j$). That is to say that the price of a good in city j is correlated with the marginal cost in city j, that is correlated with the marginal cost in city i. But $\xi_i$ and $\xi_j$ are not correlated.
 
-For the automobile sector, changes in fuel prices generate cost variation. The consumer is interested in how long can she travel with 1$ of fuel (miles per dollar), but for the car maker, increase the miles per gallon for a given model is costly. For that reason, fuel prices variation can be used as cost shifter, but they may not be that strong.
+One possibility is to use price variation across cities or regions as cost shifters. These are a valid instrument if the marginal costs are correlated across cities, but not the unobservable product characteristics ($\xi_j$). That is to say that the price of a good in city j is correlated with the marginal cost in city j, that is correlated with the marginal cost in city i. But $\xi_i$ and $\xi_j$ are not correlated.
+
+For the automobile sector, changes in fuel prices generate cost variation. The consumer is interested in how long can she travel with 1$ of fuel (miles per dollar), but for the car maker, increase the miles per gallon for a given model is costly. For that reason, fuel prices variation can be used as cost shifter, however they may not be that strong.
 
 ## What are two reasons to estimate the supply side models along with the demand side of discrete choice models? Explain. {#sec:question5}
+
 Only estimating the demand side is consistent with the endogeneity of prices and with equilibrium results, however, by adding the supply side we can get better or more precise estimates of the parameters.  Another reason to incorporate supply side models and solve for the equilibrium is that we can test with type of competitive model fits best the data. As @miller2017 used this approach to reject the hypothesis that there was a Nash-Bertrand equilibrium between two brewing company after their merge.
 
 ## What are the advantages of using a random coefficients model, à la BLP, instead of a nested logit model?
+
 IV estimator for the nested logit model is just a special case of the BLP model, where $\xi_j$ is linear in the parameters. The advantage of BLP is that it allows for non-linear relation between $\xi_j$ and the parameters, by recovering the function numerically. Another advantage is that BLP added equilibrium behavior to the models, and as it was discussed in the previous question, it can improve the accuracy of the parameters and allows us to test for market behavior.
 
 
@@ -95,7 +99,8 @@ IV estimator for the nested logit model is just a special case of the BLP model,
 ## Collapse the data to the product / market level and drop the outside good for each market as observations, creating an “outside good share” variable for each inside good choice. Report summary statistics on market shares and outside good share by plan number. Report the number of observations.
 
 First, we explore the dataset
-```{r}
+
+```{r include=FALSE}
 data <- as_tibble(data)
 str(data)
 ```
@@ -105,13 +110,14 @@ head(data)
 ```
 
 
-There are `r max(data['individual'])` persons in the dataset, `r max(data['market'])` markets, each with different plans We are given information about the plan chose by each individual (`choice` variable), as well as the price, and the observable characteristic in each plan (`x_constant, x_coinsurance, x_deductible, x_oopmax`). It is important to note that plan x in market i is not the same as plan x in market j. The value `xsi` represents the unobservable characteristics, and as such, they will only be used at the ended as a benchmark for our regression results.
+There are `r max(data['individual'])` persons in the dataset, `r max(data['market'])` markets, each with different plans. We are given information about the plan chosen by each individual (`choice` variable), as well as the price, and the observable characteristic in each plan (`x_constant, x_coinsurance, x_deductible, x_oopmax`). It is important to note that plan x in market i is not the same as plan x in market j. The value `xsi` represents the unobservable characteristics, and as such, they will only be used at the end as benchmark for our regression results.
 
-We are asked to collapse the data to the market level. First, we will keep only the row corresponding to the choice made by the individual.
+We are asked to collapse the data to the market level.The first 10 values of the collapsed dataset are showed. The complete dataset transformation can be found in the replication file. 
 
-We create a table with the outside share for each market (there should be 100 values)
+```{r include=FALSE}
+#  First, we will keep only the row corresponding to the choice made by the individual
+# We create a table with the outside share for each market (there should be 100 values)
 
-```{r }
 freq_market <- data %>% filter(choice == 1) %>% 
   group_by(market, plan) %>% 
   summarise(n = n()) %>%
@@ -120,16 +126,17 @@ freq_market <- data %>% filter(choice == 1) %>%
 outside_market <- freq_market %>% filter(plan == 0)
 ```
 
-We transform the original data, dropping the outside good and only keeping the product choose by each individual in given market:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
+# We transform the original data, dropping the outside good and only keeping the product choose by each individual in given market:
 data %>% filter(choice == 1) %>%
   left_join(outside_market %>% select(market, freq), by = "market") 
 ```
 
-Since there is information not needed, we drop them from the table and the change the `freq` variable to `s_0` (outside option):
 
-```{r}
+```{r include=FALSE}
+# Since there is information not needed, we drop them from the table and the change the `freq` variable to `s_0` (outside option):
+
 data_with_s0 <- data %>% filter(choice == 1) %>%
   left_join(outside_market %>% select(market, freq), by = "market") %>%
   select(individual:plan, s_0 = freq, price:x_oopmax)
@@ -137,9 +144,10 @@ data_with_s0 <- data %>% filter(choice == 1) %>%
 data_with_s0
 ```
 
-Then, we collapse the data by calculating the shares of each product for each market.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
+# Then, we collapse the data by calculating the shares of each product for each market.
+
 data %>% filter(choice == 1) %>% 
   group_by(market, plan) %>% 
   summarise(n = n()) %>%
@@ -147,7 +155,7 @@ data %>% filter(choice == 1) %>%
 ```
 
 
-```{r}
+```{r echo=FALSE}
 collapsed_data <- data_with_s0  %>% group_by(market, plan) %>%
   filter(plan != 0) %>%
   summarise(s_0 = mean(s_0), 
@@ -161,8 +169,10 @@ collapsed_data <- data_with_s0  %>% group_by(market, plan) %>%
   mutate(s_j_given_g = s_j / (1 - s_0)) %>%
   select(market:s_0, s_j, s_j_given_g, price:x_oopmax)
   
-collapsed_data
+head(collapsed_data, 10)
 ```
+
+`s_0` is the outside share for each market, `s_j` is the share within market for a given plan, `s_j_given_g` is the within market share.
 
 
 Now, we find the summary statistic by plan number:
