@@ -79,15 +79,15 @@ Since the parameters have been estimated, we can determine average marginal cost
 
 
 ## What are two useful source of instruments for discrete choice models? Explain.
-One posibility is to use price variation across cities or regions as cost shifters. They are a valid instrument if the marginal costs are correlated across cities, but not the unobservable product charactheristics ($\xi_j$). That is to say that the price of a good in city j is correlated with the marginal cost in city j, that is correlated with the marginal cost in city i. But $\xi_i$ and $\xi_j$ are not correlated.
+One possibility is to use price variation across cities or regions as cost shifters. They are a valid instrument if the marginal costs are correlated across cities, but not the unobservable product characteristics ($\xi_j$). That is to say that the price of a good in city j is correlated with the marginal cost in city j, that is correlated with the marginal cost in city i. But $\xi_i$ and $\xi_j$ are not correlated.
 
-For the automobile sector, changes in fuel prices generate cost variation. The consumer is interested in how long can she travel with 1$ of fue (miles per dollar), but for the car maker, increase the miles per gallon for a given model is costly. For that reason, fuel prices variation can be used as cost shifter, but they may not be that strong.
+For the automobile sector, changes in fuel prices generate cost variation. The consumer is interested in how long can she travel with 1$ of fuel (miles per dollar), but for the car maker, increase the miles per gallon for a given model is costly. For that reason, fuel prices variation can be used as cost shifter, but they may not be that strong.
 
 ## What are two reasons to estimate the supply side models along with the demand side of discrete choice models? Explain. {#sec:question5}
-Only estimating the demande side is consistent with the endogenoity of prices and with equilibirum results, however, by adding the supply side we can get better or more precise estimates of the parameters.  Another reason to incorporate supply side models and solve for the equilibrium is that we can test with type of competitive model fits best the data. As @miller2017 used this aprooach to reject the hypothesis that there was a Nash-Bertrand equilibrium between two brewing company after their merge.
+Only estimating the demand side is consistent with the endogeneity of prices and with equilibrium results, however, by adding the supply side we can get better or more precise estimates of the parameters.  Another reason to incorporate supply side models and solve for the equilibrium is that we can test with type of competitive model fits best the data. As @miller2017 used this approach to reject the hypothesis that there was a Nash-Bertrand equilibrium between two brewing company after their merge.
 
 ## What are the advantages of using a random coefficients model, à la BLP, instead of a nested logit model?
-IV estimator for the nested logit model is just a special case of the BLP model, where $\xi_j$ is linear in the parameters. The advantage of BLP is that it allows for non-linear relation between $\xi_j$ and the parameters, by recovering the function numerically. Another advantange is that BLP added equilibrium behavior to the models, and as it was discussed in the previous question, it can improve the accuracy of the parameters and allows us to test for market behaviour.
+IV estimator for the nested logit model is just a special case of the BLP model, where $\xi_j$ is linear in the parameters. The advantage of BLP is that it allows for non-linear relation between $\xi_j$ and the parameters, by recovering the function numerically. Another advantage is that BLP added equilibrium behavior to the models, and as it was discussed in the previous question, it can improve the accuracy of the parameters and allows us to test for market behavior.
 
 
 # Computational questions on static demand and cost estimation (40 points)
@@ -105,7 +105,7 @@ head(data)
 ```
 
 
-There are `r max(data['individual'])` persons in the dataset, `r max(data['market'])` markets, each with differents plans We are given information about the plan choosed by each individual (`choice` variable), as well as the price, and the observable charactheristic in each plan (`x_constant, x_coinsurance, x_deductible, x_oopmax`). It is important to note that plan x in market i is not the same as plan x in market j. The value `xsi` represents the unobservable charactheristics, and as such, they will only be used at the ended as a benchamark for our regression results.
+There are `r max(data['individual'])` persons in the dataset, `r max(data['market'])` markets, each with different plans We are given information about the plan chose by each individual (`choice` variable), as well as the price, and the observable characteristic in each plan (`x_constant, x_coinsurance, x_deductible, x_oopmax`). It is important to note that plan x in market i is not the same as plan x in market j. The value `xsi` represents the unobservable characteristics, and as such, they will only be used at the ended as a benchmark for our regression results.
 
 We are asked to collapse the data to the market level. First, we will keep only the row corresponding to the choice made by the individual.
 
@@ -270,9 +270,9 @@ reg3 <- ivreg(data = transformed_data,
 summary(reg3)
 ```
 
-We observe that when we don't use instruments for price nor withing group share, the price coefficient is positive (`r reg1$coefficients["price"]`) which would indicate that an increase in price increases the market share of the plan. Controlling for withi group share does not dissapear this effect since the price coefficient for the second regression is `r reg2$coefficients["price"] `. However, controlling for price does make the price coefficient negative, which intuitively makes sense since from the model we are quite sure that price is correlated with $\xi_j$.
+We observe that when we don't use instruments for price nor withing group share, the price coefficient is positive (`r reg1$coefficients["price"]`) which would indicate that an increase in price increases the market share of the plan. Controlling for within group share does not disappear this effect since the price coefficient for the second regression is `r reg2$coefficients["price"] `. However, controlling for price does make the price coefficient negative, which intuitively makes sense since from the model we are quite sure that price is correlated with $\xi_j$.
 
-In addition, using as instruments for each plan `k` the within sum charactheristic for values different than `k` ($z_{11} = \sum_{i \neq k } x_{i}$), provides the same estimates:
+In addition, using as instruments for each plan `k` the within sum characteristic for values different than `k` ($z_{11} = \sum_{i \neq k } x_{i}$), provides the same estimates:
 
 ```{r}
 reg3 <- ivreg(data = transformed_data, 
