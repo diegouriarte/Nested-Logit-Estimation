@@ -7,11 +7,10 @@ header-includes:
 bibliography: [citations.bib]
 output: 
   pdf_document: 
-    keep_tex: yes
     number_sections: yes
 editor_options: 
-  chunk_output_type: inline
   
+  chunk_output_type: inline
 ---
 
 
@@ -112,7 +111,7 @@ head(data)
 
 There are `r max(data['individual'])` persons in the dataset, `r max(data['market'])` markets, each with different plans. We are given information about the plan chosen by each individual (`choice` variable), as well as the price, and the observable characteristic in each plan (`x_constant, x_coinsurance, x_deductible, x_oopmax`). It is important to note that plan x in market i is not the same as plan x in market j. The value `xsi` represents the unobservable characteristics, and as such, they will only be used at the end as benchmark for our regression results.
 
-We are asked to collapse the data to the market level.The first 10 values of the collapsed dataset are showed. The complete dataset transformation can be found in the replication file. 
+We are asked to collapse the data to the market level.The first 10 values of the collapsed dataset are showed. The complete dataset transformation can be found in the replication file which can be located in the following repository: <>. 
 
 ```{r include=FALSE}
 #  First, we will keep only the row corresponding to the choice made by the individual
@@ -258,17 +257,24 @@ Now, we estimate the nested logit model. The model is as follows:
 $$
 \ln(s_j) - \ln(s_0) = \beta_0 + \beta_1 x_{coinsurance} + \beta_2 x_{deductible} + \beta_3 x_{oopmax} - \alpha p_j + \sigma \ln(s_{j/g}) + \xi_j
 $$
-```{r}
+I perform the first regression, using the transformed data. 
+
+```{r echo=FALSE}
+
 transformed_data <- data_with_instruments %>% 
   mutate(ln_sj_minus_s0 = log(s_j) - log(s_0), 
          ln_sj_g = log(s_j_given_g)) 
+
 reg1 <- lm(data = transformed_data, formula = ln_sj_minus_s0 ~ x_coinsurance + x_deductible + x_oopmax + price + ln_sj_g)
+
 summary(reg1)
 ```
 
 ## Estimate a nested logit model using Berry’s method, instrumenting for within-group share but not price. Report your results.
 
-```{r}
+Now, I utilize 2SLS with three instrumental variables (`z1, z2, z3`) and withing-group share as endogenous.
+
+```{r echo = FALSE}
 reg2 <- ivreg(data = transformed_data, 
       formula = ln_sj_minus_s0 ~ x_coinsurance + x_deductible + x_oopmax + price + ln_sj_g | . - ln_sj_g + z1 + z2 + z3)
 
@@ -277,38 +283,46 @@ summary(reg2)
 ```
 ## Estimate a nested logit model using Berry’s method, instrumenting for within-group share and price. Report your results. Does it appear that price was endogenous? How are you making this judgment?
 
-```{r}
+Finally, the same as in the previous question but instrumenting also by price.
+
+```{r echo=FALSE}
 reg3 <- ivreg(data = transformed_data, 
       formula = ln_sj_minus_s0 ~ x_coinsurance + x_deductible + x_oopmax + price + ln_sj_g | . - price - ln_sj_g + z1 + z2 + z3)
 
 summary(reg3)
 ```
 
-We observe that when we don't use instruments for price nor withing group share, the price coefficient is positive (`r reg1$coefficients["price"]`) which would indicate that an increase in price increases the market share of the plan. Controlling for within group share does not disappear this effect since the price coefficient for the second regression is `r reg2$coefficients["price"] `. However, controlling for price does make the price coefficient negative, which intuitively makes sense since from the model we are quite sure that price is correlated with $\xi_j$.
+I observe that when I don't use instruments for price nor withing group share, the price coefficient is positive (`r round(reg1$coefficients["price"],2)`) which would indicate that an increase in price increases the market share of the plan. Controlling for within group share does not disappear this effect since the price coefficient for the second regression is `r round(reg2$coefficients["price"],2) `. However, controlling for price does make the price coefficient negative, which intuitively makes sense since from the model we are quite sure that price is correlated with $\xi_j$.
 
 In addition, using as instruments for each plan `k` the within sum characteristic for values different than `k` ($z_{11} = \sum_{i \neq k } x_{i}$), provides the same estimates:
 
-```{r}
+```{r echo = FALSE}
 reg3 <- ivreg(data = transformed_data, 
       formula = ln_sj_minus_s0 ~ x_coinsurance + x_deductible + x_oopmax + price + ln_sj_g | . - price - ln_sj_g + z11 + z22 + z33)
 
 summary(reg3)
-transformed_data
+
 ```
 
 # Conceptual questions on applications of discrete choice models to antitrust (20 points)
 
 ## How did Prof. Nevo argue that the nested logit model was a useful demand model, in the Aetna/Humana merger case? (Please read the judge’s decision in this case that is on the syllabus.) 
 
-Prof. Nevo used the CMS data on Medicare Advantage plan enrollments, that also included seniors who chose Original Medicare Options. The nested logit was useful in this context because it allows us to test _whether, an to what degree, a senior might prefer "a Medicare Advantage plan because it is a Medicare Advantage plan"_ (@aetna). The key parameter in the model is the nesting parameter, that indicates the strength of this preference and it can have values between 0 and 1. 
+Prof. Nevo used the CMS data on Medicare Advantage plan enrollments that also included seniors who chose Original Medicare Options. The nested logit was useful in this context because it allows us to test _"whether, an to what degree, a senior might prefer "a Medicare Advantage plan because it is a Medicare Advantage plan"_ (@aetna). The key parameter in the model is the nesting parameter, that indicates the strength of this preference and it can have values between 0 and 1. 
 
-Nevo found that 70% of users of one of the Medicare Advantage plans would change to another Medicare Advantage plan (nesting parameter of 0.65). Nevo considered this to be an conservative estimated since the data showed that around 80% of seniors change a Medicare Advantage Plan of another Medicare Advantage Plan. Using this model, we was able to prove that an hypothetical profit-maximizing monopolist could profitably increase prices in any county. 
+Nevo found that 70% of users of one of the Medicare Advantage plans would change to another Medicare Advantage plan (nesting parameter of 0.65). Nevo considered this to be an conservative estimated since the data showed that around 80% of seniors change a Medicare Advantage Plan of another Medicare Advantage Plan. Using this model, he was able to prove that an hypothetical profit-maximizing monopolist could profitably increase prices in any county. 
 
-One turning point for the judge to accept Nevo's econometric evidence was that he used the defendant nesting parameters (that were much lower that his) and the lowest parameter he could find the literature, and still found that the Medicare Advantage passed the SSNIP test of 5% or 10%, that is, an hypothetical monopolist in that market could profitably increase prices in more than 5%.
+One turning point for the judge to accept Nevo's econometric evidence was that he used the defendant nesting parameters (that were much lower that his) and the lowest parameters he could find the literature, and still found that the Medicare Advantage passed the SSNIP test of 5% or 10%, that is, an hypothetical monopolist in that market could profitably increase prices in more than 5%.
 
 
 ## How would you would perform a hypothetical monopolist test for your estimated model of insurance demand? Explain with words and equations.
 
+
+I would calculate the own-price elasticity using the parameters from the model:
+
+$$ \eta_{jj} = \alpha_j p_j [s_j - \frac{1}{1 - \sigma} + \frac{\sigma}{1 - \sigma} s_{j/g}] $$
+
+for each product in each market. Then, using the Hypothetical Monopolist test, I would apply a 5% increase in prices for plan j, that would result in an decrease of $5\% \times \eta_{jj}$ in quantity demanded. Then, we could check if the increase in prices is still profitable, using the marginal costs for each plan. 
 
 ____
 
