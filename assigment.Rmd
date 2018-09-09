@@ -216,25 +216,28 @@ print(whole_table, markup = "latex")
 ## Construct as instruments the within-group sum of every characteristic. Report summary statistics on your instruments, with the Stata “summarize” command or analog in the software that you use
 
 
-First, we add a column to the table with the within-group sum of every characteristic (`z1, z2, z3`). However, following Barry, we will also try with the within-group sum of the characteristics without the plan `j`. We call these three instruments (`z11. z22. z33`).
+First, we add a column to the table with the within-group sum of every characteristic (`z1, z2, z3`). However, following @berry1994, we will also try with the within-group sum of the characteristics without the plan `j`. We call these three instruments (`z11, z22, z33`). Here, we report the summary statistics
 
 
-```{r}
+```{r include=FALSE}
 data_with_instruments <- collapsed_data %>% group_by(market) %>%
   summarise(z1 = sum(x_coinsurance), z2 = sum(x_deductible), z3 = sum(x_oopmax)) %>%
   right_join(collapsed_data, by = "market") %>%
   select(market, plan:x_oopmax, z1:z3) %>% 
   mutate(z11 = z1 - x_coinsurance, z22 = z2 - x_deductible, z33 = z3 - x_deductible)
 
-data_with_instruments %>% select(z1, z2, z3, z11, z22, z33) %>% summary
+data_with_instruments %>% select(z1, z2, z3, z11, z22, z33) %>% describe(skew = FALSE, quant=c(.25,.75)) %>% kable()
 ```
 
-```{r}
+```{r, include = FALSE}
 our_summary2 <- 
   with(data_with_instruments,
        list("z1" = tab_summary(z1),
             "z2" = tab_summary(z2),
-            "z3" = tab_summary(z3))
+            "z3" = tab_summary(z3),
+            "z11" = tab_summary(z11),
+            "z22" = tab_summary(z22),
+            "z33" = tab_summary(z33))
   )
   
 
@@ -247,6 +250,7 @@ print(whole_table, markup = "latex",
       cnames = c("N = 325"))
 
 ```
+
 ## Estimate a nested logit model using Berry’s method, not instrumenting for within-group share or price. Report your results.
 
 Now, we estimate the nested logit model. The model is as follows:

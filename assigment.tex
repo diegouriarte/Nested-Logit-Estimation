@@ -301,7 +301,7 @@ First, we explore the dataset
 \end{verbatim}
 
 There are 89801 persons in the dataset, 100 markets, each with different
-plans We are given information about the plan chose by each individual
+plans. We are given information about the plan chosen by each individual
 (\texttt{choice} variable), as well as the price, and the observable
 characteristic in each plan
 (\texttt{x\_constant,\ x\_coinsurance,\ x\_deductible,\ x\_oopmax}). It
@@ -310,10 +310,9 @@ in market j. The value \texttt{xsi} represents the unobservable
 characteristics, and as such, they will only be used at the end as
 benchmark for our regression results.
 
-We are asked to collapse the data to the market level. First, we will
-keep only the row corresponding to the choice made by the individual.
-The first 10 values of the collapsed dataset are showed. The complete
-set of transformation can be found in the replication file.
+We are asked to collapse the data to the market level.The first 10
+values of the collapsed dataset are showed. The complete dataset
+transformation can be found in the replication file.
 
 \begin{verbatim}
 ## # A tibble: 10 x 11
@@ -333,6 +332,10 @@ set of transformation can be found in the replication file.
 ## # ... with 3 more variables: x_coinsurance <dbl>, x_deductible <dbl>,
 ## #   x_oopmax <dbl>
 \end{verbatim}
+
+\texttt{s\_0} is the outside share for each market, \texttt{s\_j} is the
+share within market for a given plan, \texttt{s\_j\_given\_g} is the
+within market share.
 
 Now, we find the summary statistic by plan number:
 
@@ -389,10 +392,10 @@ Stata ``summarize'' command or analog in the software that you
 use}\label{construct-as-instruments-the-within-group-sum-of-every-characteristic.-report-summary-statistics-on-your-instruments-with-the-stata-summarize-command-or-analog-in-the-software-that-you-use}}
 
 First, we add a column to the table with the within-group sum of every
-characteristic (\texttt{z1,\ z2,\ z3}). However, following Barry, we
-will also try with the within-group sum of the characteristics without
-the plan \texttt{j}. We call these three instruments
-(\texttt{z11.\ z22.\ z33}).
+characteristic (\texttt{z1,\ z2,\ z3}). However, following Berry (1994),
+we will also try with the within-group sum of the characteristics
+without the plan \texttt{j}. We call these three instruments
+(\texttt{z11,\ z22,\ z33}). Here, we report the summary statistics
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -402,40 +405,27 @@ the plan \texttt{j}. We call these three instruments
 \StringTok{  }\KeywordTok{select}\NormalTok{(market, plan}\OperatorTok{:}\NormalTok{x_oopmax, z1}\OperatorTok{:}\NormalTok{z3) }\OperatorTok{%>%}\StringTok{ }
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{z11 =}\NormalTok{ z1 }\OperatorTok{-}\StringTok{ }\NormalTok{x_coinsurance, }\DataTypeTok{z22 =}\NormalTok{ z2 }\OperatorTok{-}\StringTok{ }\NormalTok{x_deductible, }\DataTypeTok{z33 =}\NormalTok{ z3 }\OperatorTok{-}\StringTok{ }\NormalTok{x_deductible)}
 
-\NormalTok{data_with_instruments }\OperatorTok{%>%}\StringTok{ }\KeywordTok{select}\NormalTok{(z1, z2, z3, z11, z22, z33) }\OperatorTok{%>%}\StringTok{ }\NormalTok{summary}
+\NormalTok{data_with_instruments }\OperatorTok{%>%}\StringTok{ }\KeywordTok{select}\NormalTok{(z1, z2, z3, z11, z22, z33) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{describe}\NormalTok{(}\DataTypeTok{skew =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{quant=}\KeywordTok{c}\NormalTok{(.}\DecValTok{25}\NormalTok{,.}\DecValTok{75}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{kable}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-##        z1                z2               z3               z11          
-##  Min.   :0.06864   Min.   :0.2497   Min.   :0.09086   Min.   :0.002513  
-##  1st Qu.:0.66646   1st Qu.:0.6735   1st Qu.:0.63388   1st Qu.:0.415790  
-##  Median :0.92851   Median :0.9460   Median :0.89035   Median :0.678881  
-##  Mean   :0.94628   Mean   :0.9877   Mean   :0.91782   Mean   :0.685327  
-##  3rd Qu.:1.23344   3rd Qu.:1.2356   3rd Qu.:1.30162   3rd Qu.:0.976185  
-##  Max.   :1.56273   Max.   :1.9355   Max.   :1.75793   Max.   :1.507379  
-##       z22                z33         
-##  Min.   :0.003761   Min.   :-0.2395  
-##  1st Qu.:0.417792   1st Qu.: 0.3585  
-##  Median :0.692470   Median : 0.6365  
-##  Mean   :0.716415   Mean   : 0.6465  
-##  3rd Qu.:0.993354   3rd Qu.: 0.9571  
-##  Max.   :1.754211   Max.   : 1.6024
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{our_summary2 <-}\StringTok{ }
-\StringTok{  }\KeywordTok{with}\NormalTok{(data_with_instruments,}
-       \KeywordTok{list}\NormalTok{(}\StringTok{"z1"}\NormalTok{ =}\StringTok{ }\KeywordTok{tab_summary}\NormalTok{(z1),}
-            \StringTok{"z2"}\NormalTok{ =}\StringTok{ }\KeywordTok{tab_summary}\NormalTok{(z2),}
-            \StringTok{"z3"}\NormalTok{ =}\StringTok{ }\KeywordTok{tab_summary}\NormalTok{(z3))}
-\NormalTok{  )}
-  
-
-\NormalTok{whole_table <-}\StringTok{ }\KeywordTok{summary_table}\NormalTok{(data_with_instruments, our_summary2)}
-\end{Highlighting}
-\end{Shaded}
+\begin{tabular}{l|r|r|r|r|r|r|r|r|r|r}
+\hline
+  & vars & n & mean & sd & min & max & range & se & Q0.25 & Q0.75\\
+\hline
+z1 & 1 & 325 & 0.9462760 & 0.3608348 & 0.0686351 & 1.562735 & 1.494100 & 0.0200155 & 0.6664640 & 1.2334426\\
+\hline
+z2 & 2 & 325 & 0.9877420 & 0.4141706 & 0.2497498 & 1.935549 & 1.685799 & 0.0229741 & 0.6735020 & 1.2356470\\
+\hline
+z3 & 3 & 325 & 0.9178204 & 0.3912168 & 0.0908578 & 1.757930 & 1.667072 & 0.0217008 & 0.6338763 & 1.3016240\\
+\hline
+z11 & 4 & 325 & 0.6853273 & 0.3465371 & 0.0025128 & 1.507379 & 1.504866 & 0.0192224 & 0.4157900 & 0.9761845\\
+\hline
+z22 & 5 & 325 & 0.7164153 & 0.3895531 & 0.0037613 & 1.754211 & 1.750450 & 0.0216085 & 0.4177920 & 0.9933539\\
+\hline
+z33 & 6 & 325 & 0.6464937 & 0.4161860 & -0.2394983 & 1.602361 & 1.841860 & 0.0230858 & 0.3584879 & 0.9571203\\
+\hline
+\end{tabular}
 
 \begin{tabular}{l|l}
 \hline
@@ -470,6 +460,36 @@ Summary Statistics & N = 325\\
 ~~ mean (sd) & 0.92 $\pm$ 0.39\\
 \hline
 ~~ max & 1.75793\\
+\hline
+\bf{z11} & ~\\
+\hline
+~~ min & 0.00251275\\
+\hline
+~~ median (IQR) & 0.68 (0.42, 0.98)\\
+\hline
+~~ mean (sd) & 0.69 $\pm$ 0.35\\
+\hline
+~~ max & 1.507379\\
+\hline
+\bf{z22} & ~\\
+\hline
+~~ min & 0.00376132\\
+\hline
+~~ median (IQR) & 0.69 (0.42, 0.99)\\
+\hline
+~~ mean (sd) & 0.72 $\pm$ 0.39\\
+\hline
+~~ max & 1.754211\\
+\hline
+\bf{z33} & ~\\
+\hline
+~~ min & -0.2394983\\
+\hline
+~~ median (IQR) & 0.64 (0.36, 0.96)\\
+\hline
+~~ mean (sd) & 0.65 $\pm$ 0.42\\
+\hline
+~~ max & 1.602361\\
 \hline
 \end{tabular}
 
