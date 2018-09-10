@@ -111,7 +111,7 @@ head(data)
 
 There are `r max(data['individual'])` persons in the dataset, `r max(data['market'])` markets, each with different plans. We are given information about the plan chosen by each individual (`choice` variable), as well as the price, and the observable characteristic in each plan (`x_constant, x_coinsurance, x_deductible, x_oopmax`). It is important to note that plan x in market i is not the same as plan x in market j. The value `xsi` represents the unobservable characteristics, and as such, they will only be used at the end as benchmark for our regression results.
 
-We are asked to collapse the data to the market level.The first 10 values of the collapsed dataset are showed. The complete dataset transformation can be found in the replication file which can be located in the following repository: <https://github.com/diegouriarte/Nested-Logit-Estimation>. 
+We are asked to collapse the data to the market level.The first 10 values of the collapsed dataset are showed. The complete dataset transformation can be found in the replication file in the following repository: <https://github.com/diegouriarte/Nested-Logit-Estimation>. 
 
 ```{r include=FALSE}
 #  First, we will keep only the row corresponding to the choice made by the individual
