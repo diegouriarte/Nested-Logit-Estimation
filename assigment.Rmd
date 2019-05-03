@@ -1,12 +1,12 @@
 ---
 title: "Assignment"
 author: "Diego Uriarte"
-date: "September 09, 2018"
+date: "May 3, 2018"
 header-includes:
    - \usepackage{amsmath}
 bibliography: [citations.bib]
 output: 
-  pdf_document: 
+  html_document: 
     number_sections: yes
 editor_options: 
   
